@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="ko" data-theme="dark"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SKYLORD · 항공사 타이쿤</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#090f1e;--bg2:#141e3a;--p:rgba(16,24,44,.8);--b:rgba(255,255,255,.08);--t:#e8eefb;--m:#8d9ab5;--a:#6c8cff;--a2:#9b7bff;--ok:#3ddc97;--bad:#ff6b81;--warn:#f5b94d;--land:rgba(108,140,255,.10);--grid:rgba(255,255,255,.035);--in:rgba(255,255,255,.06)}
+[data-theme=light]{--bg:#e7edf8;--bg2:#f7faff;--p:rgba(255,255,255,.84);--b:rgba(15,26,46,.09);--t:#0f1a2e;--m:#5d6b86;--a:#4a6cf0;--a2:#7a5af0;--ok:#12a36a;--bad:#e0405b;--warn:#c98a1a;--land:rgba(74,108,240,.13);--grid:rgba(15,26,46,.05);--in:rgba(15,26,46,.06)}
+*{box-sizing:border-box;margin:0}
+body{font:14px/1.5 'Noto Sans KR',system-ui,sans-serif;background:var(--bg);color:var(--t);overflow:hidden;height:100vh}
+#map{position:fixed;inset:0;width:100%;height:100%}
+.glass{background:var(--p);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--b);border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.22)}
+[hidden]{display:none!important}
+button,input,select{font:inherit;color:inherit}
+.btn{border:0;cursor:pointer;padding:9px 16px;border-radius:11px;background:linear-gradient(135deg,var(--a),var(--a2));color:#fff;font-weight:700;transition:transform .15s,filter .15s}
+.btn:hover{transform:translateY(-1px);filter:brightness(1.1)}.btn:active{transform:scale(.96)}
+.btn.g{background:var(--in);color:var(--t);font-weight:500}.btn.s{padding:5px 11px;font-size:12px}.btn.r{background:var(--bad)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+input,select{background:var(--in);border:1px solid var(--b);border-radius:10px;padding:8px 11px;outline:0;width:100%}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--a);outline-offset:1px}
+input[type=range]{padding:0;accent-color:var(--a)}
+select option{background:#1a2440;color:#e8eefb}
+#intro{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px;overflow:auto}
+#intro h1{font-size:clamp(38px,7vw,76px);font-weight:900;letter-spacing:-.04em;background:linear-gradient(120deg,var(--t),var(--a) 60%,var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent;text-align:center;animation:rise .9s cubic-bezier(.2,.8,.2,1)}
+#intro p{color:var(--m)}
+.ab{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-width:860px;width:100%}
+.ac{padding:10px 12px;border-radius:13px;background:var(--p);border:1px solid var(--b);cursor:pointer;transition:.2s;text-align:left;backdrop-filter:blur(10px)}
+.ac:hover{transform:translateY(-3px)}.ac.on{border-color:var(--a);box-shadow:0 0 0 1px var(--a),0 8px 30px rgba(108,140,255,.25)}
+.ac i{display:block;width:22px;height:4px;border-radius:2px;margin-bottom:6px}.ac b{display:block;font-size:13px}.ac small{color:var(--m);font-size:11px}
+.row{display:flex;gap:10px;align-items:center}
+#top{position:fixed;top:12px;left:12px;right:12px;height:58px;display:flex;align-items:center;gap:14px;padding:0 16px;z-index:5}
+.logo{font-weight:900;letter-spacing:-.03em;font-size:17px}.sp{flex:1}
+.stat small{display:block;color:var(--m);font-size:10px;line-height:1.1}.stat b{font-size:16px;font-variant-numeric:tabular-nums}
+.ib{width:36px;height:36px;border-radius:11px;border:1px solid var(--b);background:var(--in);cursor:pointer;font-size:16px}
+.sb{padding:5px 9px;border-radius:8px;border:0;background:transparent;color:var(--m);cursor:pointer;font-weight:700}.sb.on{background:var(--a);color:#fff}
+.dev{display:inline-block;padding:1px 8px;border-radius:20px;background:linear-gradient(120deg,#f5c76b,#ff8fb0);color:#2a1830;font-size:11px;font-weight:900;margin-left:6px;vertical-align:1px}
+#nav{position:fixed;left:12px;top:82px;display:flex;flex-direction:column;gap:4px;padding:8px;z-index:5}
+#nav button{border:0;background:none;color:var(--m);cursor:pointer;padding:9px 6px;border-radius:12px;font-size:10.5px;width:62px;transition:.2s}
+#nav button span{display:block;font-size:19px;line-height:1.2}
+#nav button.on{background:linear-gradient(135deg,var(--a),var(--a2));color:#fff}
+#panel{position:fixed;right:12px;top:82px;bottom:12px;width:470px;overflow:auto;padding:18px;z-index:4}
+.fi{animation:fi .45s cubic-bezier(.2,.8,.2,1)}
+@keyframes fi{from{opacity:0;transform:translateX(24px)}}@keyframes rise{from{opacity:0;transform:translateY(30px) scale(.97)}}
+h2{font-size:19px;margin-bottom:12px;letter-spacing:-.02em}h3{font-size:14px;margin:14px 0 8px}
+.c{background:var(--in);border:1px solid var(--b);border-radius:14px;padding:13px;margin-bottom:10px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.k{background:var(--in);border-radius:12px;padding:10px}.k small{color:var(--m);font-size:11px;display:block}.k b{font-size:17px}
+.mu{color:var(--m)}.ok{color:var(--ok)}.bad{color:var(--bad)}.sm{font-size:12px}
+.bar{height:6px;border-radius:4px;background:var(--in);overflow:hidden}.bar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--a),var(--a2));transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.chip{display:inline-block;padding:2px 8px;border-radius:20px;background:var(--in);font-size:11px;color:var(--m);margin:0 4px 4px 0}
+.fl{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--m);margin-top:6px}
+#modal{position:fixed;inset:0;background:rgba(5,8,18,.55);display:flex;align-items:center;justify-content:center;z-index:20;padding:14px;backdrop-filter:blur(4px)}
+#modal .glass{width:440px;max-width:100%;max-height:92vh;overflow:auto;padding:20px;animation:rise .35s cubic-bezier(.2,.8,.2,1)}
+.seg{display:flex;background:var(--in);border-radius:10px;padding:3px}.seg button{flex:1;border:0;background:none;padding:7px;border-radius:8px;cursor:pointer}.seg .on{background:var(--a);color:#fff}
+#toasts{position:fixed;left:50%;transform:translateX(-50%);top:80px;z-index:30;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+.ts{padding:9px 16px;border-radius:12px;background:var(--p);border:1px solid var(--b);backdrop-filter:blur(14px);font-weight:500;animation:rise .4s,out .4s 2.6s forwards}
+.ts.ok{border-color:var(--ok)}.ts.bad{border-color:var(--bad)}@keyframes out{to{opacity:0;transform:translateY(-10px)}}
+@media(max-width:760px){#nav{top:auto;bottom:8px;left:8px;right:8px;flex-direction:row;justify-content:space-around;padding:4px}#nav button{width:auto;flex:1;padding:6px 2px}#panel{top:auto;left:8px;right:8px;bottom:78px;width:auto;height:52vh}#top{gap:8px;padding:0 10px;left:8px;right:8px}.logo,#an{display:none}.ab{grid-template-columns:repeat(3,1fr)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body>
+<canvas id="map"></canvas>
+
+<div id="intro">
+  <h1>SKYLORD</h1>
+  <p>실제 항공사를 골라 하늘길을 지배하세요</p>
+  <div class="ab" id="ab"></div>
+  <div class="row"><button class="btn" id="go" onclick="A.start()">새 게임 시작</button><button class="btn g" id="cont" onclick="A.cont()" hidden>이어하기</button><button class="btn g" onclick="A.set()">설정</button></div>
+  <small class="mu" id="sync">로컬 모드</small>
+</div>
+
+<div id="game" hidden>
+  <header id="top" class="glass"><b class="logo">SKYLORD</b><span id="an"></span><span class="sp"></span>
+    <div class="stat"><small>현금</small><b id="cash">$0</b></div><div class="stat"><small>날짜</small><b id="date"></b></div>
+    <div class="row" id="spd" style="gap:2px"></div><button class="ib" onclick="A.set()" title="설정">⚙</button><button class="ib" onclick="A.home()" title="메인">⌂</button></header>
+  <nav id="nav" class="glass"></nav>
+  <main id="panel" class="glass"></main>
+</div>
+<div id="modal" hidden></div><div id="toasts"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-auth-compat.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-firestore-compat.min.js"></script>
+<script>
+/* ===== 설정: 여기를 수정하세요 ===== */
+const FB={apiKey:"",authDomain:"",projectId:"",appId:""}; // Firebase 콘솔 > 프로젝트 설정 > 웹 앱 config
+const DEV_CODE="SKYLORD-DEV-2026"; // 개발자 코드 (반드시 바꾸세요)
+/* =================================== */
+const $=s=>document.querySelector(s),R=Math.random;
+const fm=v=>{const a=Math.abs(v),s=v<0?'-':'';return s+'$'+(a>=1e9?(a/1e9).toFixed(2)+'B':a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?(a/1e3).toFixed(1)+'K':a.toFixed(0))};
+// [이름,위도,경도,규모(1-5)] → AP: [이름,lat,lon,tier]
+const AP={ICN:["서울 인천",37.46,126.44,5],NRT:["도쿄 나리타",35.77,140.39,4],PVG:["상하이",31.14,121.8,4],HKG:["홍콩",22.31,113.91,4],SIN:["싱가포르",1.36,103.99,4],BKK:["방콕",13.69,100.75,3],DEL:["델리",28.56,77.1,3],DXB:["두바이",25.25,55.36,5],DOH:["도하",25.27,51.61,3],IST:["이스탄불",41.26,28.74,4],CDG:["파리",49.0,2.55,5],LHR:["런던",51.47,-0.45,5],FRA:["프랑크푸르트",50.03,8.57,4],JFK:["뉴욕",40.64,-73.78,5],LAX:["로스앤젤레스",33.94,-118.41,5],ATL:["애틀랜타",33.64,-84.43,4],GRU:["상파울루",-23.43,-46.47,3],JNB:["요하네스버그",-26.14,28.24,2],SYD:["시드니",-33.94,151.18,3]};
+const AL=[["KE","대한항공","ICN","#6c8cff",560],["OZ","아시아나항공","ICN","#c9a35c",330],["JL","일본항공","NRT","#ff7b8f",540],["CX","캐세이퍼시픽","HKG","#3ddc97",520],["SQ","싱가포르항공","SIN","#f5b94d",650],["AI","에어인디아","DEL","#ff9b6b",300],["EK","에미레이트","DXB","#e0586a",800],["QR","카타르항공","DOH","#a95d8c",700],["TK","터키항공","IST","#ff6f6f",620],["AF","에어프랑스","CDG","#86a8ff",720],["BA","브리티시항공","LHR","#5b73e0",640],["LH","루프트한자","FRA","#ffc857",780],["DL","델타항공","ATL","#5fb0e8",900],["LA","라탐항공","GRU","#c86b9a",360],["QF","콴타스","SYD","#ff6b6b",450]];
+// [기종,좌석단위,가격(M$),월 리스(M$),항속거리km]
+const M=[["A220-300",130,80,.55,6000],["B737-800",170,100,.7,5400],["A320neo",180,110,.78,6300],["B787-9",290,260,1.9,14000],["A350-900",320,320,2.3,15000],["B777-300ER",380,340,2.5,13500],["A380-800",520,450,3.4,15000]];
+const LAND=[[[-168,66],[-125,70],[-95,72],[-60,60],[-55,48],[-80,25],[-97,18],[-117,32],[-125,48]],[[-80,10],[-60,10],[-35,-6],[-40,-23],[-58,-38],[-70,-55],[-75,-20]],[[-10,36],[-10,55],[30,70],[100,76],[170,68],[140,45],[122,30],[110,10],[100,2],[80,8],[72,20],[55,25],[35,30],[28,38]],[[-17,15],[-5,35],[32,31],[43,12],[51,11],[40,-15],[32,-30],[18,-34],[10,-5],[-10,5]],[[114,-22],[130,-12],[150,-20],[153,-30],[145,-38],[115,-34]]];
+
+let S=null,ST=Object.assign({theme:'dark',bgm:.35,sfx:.6,name:'기장님',dev:false},JSON.parse(localStorage.sl_set||'{}'));
+let tab='dash',spd=1,fb=null,user=null,pick='KE',CL={};
+const AX=c=>AL.find(x=>x[0]==c);
+
+/* ---------- 사운드 (WebAudio 합성) ---------- */
+let AC,bg=null;
+const ac=()=>{AC=AC||new(window.AudioContext||webkitAudioContext)();if(AC.state=='suspended')AC.resume();return AC};
+function tone(f,d,ty,v,w=0){const a=ac(),o=a.createOscillator(),g=a.createGain(),t=a.currentTime+w;o.type=ty||'sine';o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g).connect(a.destination);o.start(t);o.stop(t+d)}
+const sfx={click:()=>tone(680,.07,'triangle',ST.sfx*.2),buy:()=>{tone(523,.12,'sine',ST.sfx*.25);tone(784,.25,'sine',ST.sfx*.25,.09);tone(1046,.3,'sine',ST.sfx*.2,.18)},err:()=>tone(170,.22,'sawtooth',ST.sfx*.15),cash:()=>{tone(1200,.08,'sine',ST.sfx*.15);tone(1600,.12,'sine',ST.sfx*.12,.06)}};
+function bgm(){clearInterval(bg);bg=null;if(ST.bgm<=0||!AC)return;const ch=[[220,262,330],[175,220,262],[196,247,294],[165,196,247]];let i=0;const p=()=>{if(ST.bgm<=0)return;ch[i++%4].forEach((f,k)=>{tone(f,3.4,'triangle',ST.bgm*.07,k*.05);tone(f*2,2.2,'sine',ST.bgm*.03,.9+k*.25)})};p();bg=setInterval(p,3200)}
+addEventListener('pointerdown',()=>{if(!AC){ac();bgm()}},{once:true});
+
+/* ---------- 저장 / Firebase ---------- */
+const applyTheme=()=>{document.documentElement.dataset.theme=ST.theme;const c=getComputedStyle(document.documentElement),g=n=>c.getPropertyValue(n).trim();CL={bg:g('--bg'),bg2:g('--bg2'),a:g('--a'),land:g('--land'),grid:g('--grid'),ok:g('--ok'),bad:g('--bad'),t:g('--t')}};
+let sv;const save=()=>{if(!S)return;S.t=Date.now();localStorage.sl_save=JSON.stringify(S);clearTimeout(sv);sv=setTimeout(cloud,800)};
+const saveSet=()=>{localStorage.sl_set=JSON.stringify(ST);clearTimeout(sv);sv=setTimeout(cloud,800)};
+async function cloud(){if(!fb||!user)return;try{await fb.collection('users').doc(user.uid).set({save:localStorage.sl_save||null,settings:ST,updated:Date.now()});$('#sync').textContent='☁ 클라우드 저장됨'}catch(e){$('#sync').textContent='⚠ 클라우드 오류: '+e.code}}
+function initFB(){if(!FB.apiKey||typeof firebase==='undefined'){$('#sync').textContent='로컬 모드 (Firebase 설정 필요)';return}
+ firebase.initializeApp(FB);const au=firebase.auth();fb=firebase.firestore();
+ au.onAuthStateChanged(async u=>{if(!u){au.signInAnonymously().catch(e=>$('#sync').textContent='⚠ '+e.code);return}user=u;
+  try{const d=await fb.collection('users').doc(u.uid).get();if(d.exists){const x=d.data();if(x.settings)Object.assign(ST,x.settings);const lt=localStorage.sl_save?JSON.parse(localStorage.sl_save).t||0:0;if(x.save&&(JSON.parse(x.save).t||0)>lt)localStorage.sl_save=x.save;applyTheme()}}catch(e){}
+  $('#sync').textContent='☁ 클라우드 연결됨';intro()})}
+
+/* ---------- 계산 ---------- */
+const rad=x=>x*Math.PI/180;
+const D=(a,b)=>{const p=AP[a],q=AP[b],h=Math.sin(rad(q[1]-p[1])/2)**2+Math.cos(rad(p[1]))*Math.cos(rad(q[1]))*Math.sin(rad(q[2]-p[2])/2)**2;return 12742*Math.asin(Math.sqrt(h))};
+const seats=p=>({f:p.f,b:p.b,e:Math.max(0,M[p.m][1]-4*p.f-2*p.b)});
+const ps=r=>S.planes.filter(p=>p.route==r.id&&!p.mt&&p.cond>=20);
+const comp=r=>AL.filter(x=>x[0]!=S.air&&(x[2]==r.a||x[2]==r.b)).length;
+const used=ap=>S.planes.filter(p=>{const r=S.routes.find(r=>r.id==p.route);return r&&(r.a==ap||r.b==ap)}).length;
+const pn=p=>`${M[p.m][0]} #${p.id}`;
+const fval=()=>S.planes.reduce((s,p)=>s+(p.own?M[p.m][2]*1e6*(.45+.4*p.cond/100):0),0);
+const score=()=>S.cash+fval()+Object.values(S.slots).reduce((a,b)=>a+b,0)*1e6;
+const ranks=()=>[...AL.filter(x=>x[0]!=S.air).map(x=>({c:x[0],n:x[1],v:S.ai[x[0]],col:x[3]})),{c:S.air,n:AX(S.air)[1],v:score(),col:AX(S.air)[3],me:1}].sort((a,b)=>b.v-a.v);
+function econ(r){const d=D(r.a,r.b),P=ps(r),z={rev:0,cost:0,pax:0,lf:0,rt:0};if(!P.length)return z;
+ const rt=Math.min(3,14/(2*d/800+1.5)),ta=AP[r.a][3],tb=AP[r.b][3],base=110*Math.sqrt(ta*tb)/(1+d/9000);
+ const rep=1+(P.reduce((s,p)=>s+p.cond,0)/P.length-70)/250,cm=1/(1+.35*comp(r)),ref=60+.12*d,mul=[1,3,6],sh=[1,.16,.035],ex=[1,1+d/12000,1+d/8000];
+ const sc=[0,0,0];P.forEach(p=>{const s=seats(p);sc[0]+=s.e*rt;sc[1]+=s.b*rt;sc[2]+=s.f*rt});
+ let rev=0,pax=0,st=0;for(let i=0;i<3;i++){const fare=ref*mul[i]*r.k[i],dm=base*sh[i]*Math.pow(1/r.k[i],1.6)*rep*cm*ex[i],n=Math.min(sc[i],dm);rev+=n*fare*2;pax+=n*2;st+=sc[i]*2}
+ const cost=P.reduce((s,p)=>s+rt*(M[p.m][1]*.03*d*2+(ta+tb)*350),0);
+ return{rev,cost,pax,lf:st?pax/st:0,rt}}
+const refFare=(r,i)=>Math.round((60+.12*D(r.a,r.b))*[1,3,6][i]*r.k[i]);
+
+/* ---------- 액션 ---------- */
+const log=m=>{S.log.unshift(`${S.day?'D+'+S.day:'D+0'}  ${m}`);S.log=S.log.slice(0,8)};
+function toast(m,t){const e=document.createElement('div');e.className='ts '+(t||'');e.textContent=m;$('#toasts').append(e);setTimeout(()=>e.remove(),3000);t=='bad'?sfx.err():0}
+const A={
+ pickA(c){pick=c;sfx.click();intro()},
+ start(){if(localStorage.sl_save&&!confirm('저장된 게임이 있습니다. 덮어쓰고 새로 시작할까요?'))return;
+  const a=AX(pick);S={air:pick,cash:12e7,day:0,planes:[{id:1,m:0,own:1,cond:100,f:0,b:8,route:null,mt:0}],routes:[],slots:{[a[2]]:8},hist:[],pax:0,nid:2,ai:{},log:[],rank:0,rid:1,t:0};
+  AL.forEach(x=>S.ai[x[0]]=x[4]*1e6*(.9+R()*.2));log(`${a[1]} 설립 — 허브 ${a[2]}`);enter()},
+ cont(){S=JSON.parse(localStorage.sl_save);enter()},
+ home(){save();S=null;$('#game').hidden=true;$('#intro').hidden=false;intro();rs()},
+ tab(t){tab=t;sfx.click();render(1)},
+ spd(v){spd=v;sfx.click();spdUI()},
+ buy(m,own){const c=own?M[m][2]*1e6:M[m][3]*2e6;if(S.cash<c)return toast('현금이 부족합니다 ('+fm(c)+' 필요)','bad');S.cash-=c;S.planes.push({id:S.nid++,m,own,cond:100,f:0,b:0,route:null,mt:0});log(`${M[m][0]} ${own?'구매':'리스'}`);sfx.buy();burst(innerWidth*.3,innerHeight*.5,CL.ok,40);save();render();ui()},
+ sell(id){const p=S.planes.find(p=>p.id==id);if(!confirm(pn(p)+(p.own?' 매각 ('+fm(M[p.m][2]*1e6*(.45+.4*p.cond/100)*.85)+' 회수)':' 리스 반납')+'할까요?'))return;if(p.own)S.cash+=M[p.m][2]*1e6*(.45+.4*p.cond/100)*.85;S.planes=S.planes.filter(x=>x!=p);sfx.cash();save();render();ui()},
+ assign(id,v){const p=S.planes.find(p=>p.id==id);if(!v){p.route=null;return render()}const r=S.routes.find(r=>r.id==+v);
+  if(D(r.a,r.b)>M[p.m][4]){toast(`항속거리 부족 (${M[p.m][4]}km)`,'bad');return render()}
+  p.route=null;for(const ap of[r.a,r.b])if((S.slots[ap]||0)-used(ap)<1){toast(`${ap} 슬롯이 부족합니다`,'bad');return render()}
+  p.route=r.id;sfx.click();save();render()},
+ cabin(id,k,v){const p=S.planes.find(p=>p.id==id),cap=M[p.m][1];p[k]=+v;while(cap-4*p.f-2*p.b<cap*.3){k=='f'?p.f--:p.b--}save();render()},
+ fix(id){const p=S.planes.find(p=>p.id==id),c=(100-p.cond)*M[p.m][2]*1e6*.0002;if(S.cash<c)return toast('정비비 부족','bad');S.cash-=c;p.mt=Math.ceil((100-p.cond)/12)+1;log(`${pn(p)} 정비 시작 (${fm(c)})`);sfx.buy();save();render();ui()},
+ fixAll(){S.planes.filter(p=>p.cond<70&&!p.mt).forEach(p=>A.fix(p.id))},
+ slot(ap){const c=1.5e6*AP[ap][3]*(1+(S.slots[ap]||0)/10);if(S.cash<c)return toast('현금 부족 ('+fm(c)+')','bad');S.cash-=c;S.slots[ap]=(S.slots[ap]||0)+1;sfx.buy();save();render();ui()},
+ route(){const a=$('#ra').value,b=$('#rb').value;if(a==b)return toast('출발·도착이 같습니다','bad');if(D(a,b)<300)return toast('최소 300km 이상이어야 합니다','bad');if(S.routes.some(r=>(r.a==a&&r.b==b)||(r.a==b&&r.b==a)))return toast('이미 개설된 노선입니다','bad');
+  const c=2e5*(AP[a][3]+AP[b][3]);if(S.cash<c)return toast('개설비 부족 ('+fm(c)+')','bad');S.cash-=c;S.routes.push({id:S.rid++,a,b,k:[1,1,1]});log(`노선 개설 ${a}–${b}`);sfx.buy();save();render();ui()},
+ delR(id){S.planes.forEach(p=>p.route==id?p.route=null:0);S.routes=S.routes.filter(r=>r.id!=id);save();render()},
+ fare(id,i,v){S.routes.find(r=>r.id==id).k[i]=+v;save();render()},
+ set(){modal()},
+ theme(t){ST.theme=t;applyTheme();saveSet();modal()},
+ vol(k,v){ST[k]=+v;saveSet();if(k=='bgm')bgm()},
+ name(v){ST.name=v||'기장님';saveSet();ui()},
+ google(){try{firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())}catch(e){toast('Firebase 설정이 필요합니다','bad')}},
+ devIn(){if($('#dc').value===DEV_CODE){ST.dev=true;saveSet();sfx.buy();burst(innerWidth/2,innerHeight/2,'#f5c76b',80);toast('개발자 칭호가 지급되었습니다','ok');modal();ui()}else toast('코드가 올바르지 않습니다','bad')},
+ dev(k){if(!ST.dev)return;if(k=='cash')S.cash+=5e8;if(k=='day')for(let i=0;i<30;i++)tick();if(k=='fix')S.planes.forEach(p=>{p.cond=100;p.mt=0});if(k=='slot')Object.keys(AP).forEach(a=>S.slots[a]=(S.slots[a]||0)+5);if(k=='reset'&&confirm('모든 데이터를 삭제할까요?')){localStorage.removeItem('sl_save');S=null;location.reload()}sfx.cash();save();ui();render()}
+};
+
+/* ---------- 시뮬레이션 ---------- */
+function tick(){S.day++;let inc=0;
+ S.routes.forEach(r=>{const e=econ(r),pf=e.rev-e.cost;inc+=pf;S.pax+=e.pax;r.pf=pf;ps(r).forEach(p=>p.cond=Math.max(0,p.cond-.3*e.rt));
+  if(e.rev>0&&R()<.6){const a=xy(r.a),b=xy(r.b);fl.push({x:(a[0]+b[0])/2,y:(a[1]+b[1])/2-24,t:0,s:(pf>=0?'+':'')+fm(pf),c:pf>=0?CL.ok:CL.bad})}});
+ S.planes.forEach(p=>{if(p.mt>0&&--p.mt==0){p.cond=100;log(pn(p)+' 정비 완료');sfx.cash()}});
+ if(S.day%30==0){let c=0;S.planes.forEach(p=>c+=(p.own?0:M[p.m][3]*1e6)+3e4);inc-=c;log('월 고정비 '+fm(c)+' (리스·인건비)')}
+ S.cash+=inc;S.inc=inc;AL.forEach(x=>{if(x[0]!=S.air)S.ai[x[0]]*=1+.0003+R()*.0006});
+ S.hist.push(score());if(S.hist.length>90)S.hist.shift();
+ if(S.day%30==0){const rk=ranks().findIndex(x=>x.me)+1;if(S.rank&&rk<S.rank){toast('순위 상승! '+rk+'위','ok');burst(innerWidth/2,innerHeight/3,CL.a,90);sfx.buy()}S.rank=rk}
+ if(S.day%5==0)save();ui(1)}
+
+/* ---------- UI ---------- */
+const NAV=[['dash','◎','현황'],['mk','✈','시장'],['fl','▤','함대'],['rt','⇄','노선'],['sl','⌖','슬롯·정비'],['rk','♛','순위']];
+function intro(){$('#ab').innerHTML=AL.map(a=>`<div class="ac ${pick==a[0]?'on':''}" onclick="A.pickA('${a[0]}')"><i style="background:${a[3]}"></i><b>${a[1]}</b><small>허브 ${a[2]}</small></div>`).join('');$('#cont').hidden=!localStorage.sl_save}
+function enter(){$('#intro').hidden=true;$('#game').hidden=false;$('#nav').innerHTML=NAV.map(n=>`<button data-t="${n[0]}" onclick="A.tab('${n[0]}')"><span>${n[1]}</span>${n[2]}</button>`).join('');tab='dash';spdUI();ui();render(1);rs();save()}
+function spdUI(){$('#spd').innerHTML=[0,1,2,4,...(ST.dev?[16]:[])].map(v=>`<button class="sb ${spd==v?'on':''}" onclick="A.spd(${v})">${v?v+'x':'Ⅱ'}</button>`).join('')}
+function ui(r){if(!S)return;const a=AX(S.air);$('#an').innerHTML=`<b style="color:${a[3]}">${a[1]}</b> <span class="mu sm">${ST.name}</span>${ST.dev?'<span class="dev">★ 개발자</span>':''}`;
+ $('#date').textContent=new Date(Date.UTC(2026,0,1)+S.day*864e5).toISOString().slice(0,10);
+ if(r&&!document.activeElement.matches('input,select')&&(['dash','rk'].includes(tab)||S.day%5==0))render()}
+function render(anim){if(!S)return;const p=$('#panel');p.classList.toggle('fi',!!anim);
+ document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t==tab));
+ const sc=p.scrollTop;p.innerHTML=({dash:vDash,mk:vMk,fl:vFl,rt:vRt,sl:vSl,rk:vRk})[tab]();p.scrollTop=sc}
+const k=(l,v,c)=>`<div class="k"><small>${l}</small><b class="${c||''}">${v}</b></div>`;
+function vDash(){const h=S.hist,mn=Math.min(...h,S.cash),mx=Math.max(...h,1),pts=h.map((v,i)=>`${i/(Math.max(h.length-1,1))*400},${86-(v-mn)/(mx-mn||1)*80}`).join(' ');
+ const rk=ranks().findIndex(x=>x.me)+1;
+ return`<h2>경영 현황</h2><div class="g3">${k('일 순이익',fm(S.inc||0),(S.inc||0)>=0?'ok':'bad')}${k('항공기',S.planes.length+'대')}${k('운항 노선',S.routes.length+'개')}${k('누적 승객',Math.round(S.pax).toLocaleString())}${k('기업 가치',fm(score()))}${k('세계 순위',rk+'위')}</div>
+ <h3>기업 가치 추이</h3><div class="c"><svg viewBox="0 0 400 90" width="100%" height="90"><defs><linearGradient id="gg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${CL.a}" stop-opacity=".35"/><stop offset="1" stop-color="${CL.a}" stop-opacity="0"/></linearGradient></defs>${h.length>1?`<polygon points="0,90 ${pts} 400,90" fill="url(#gg)"/><polyline points="${pts}" fill="none" stroke="${CL.a}" stroke-width="2.5" stroke-linejoin="round"/>`:''}</svg></div>
+ <h3>소식</h3><div class="c sm">${S.log.map(l=>`<div class="mu">${l}</div>`).join('')}</div>
+ ${S.routes.length?'':`<div class="c"><b>시작 가이드</b><div class="sm mu">① 노선 탭에서 노선을 개설 → ② 함대 탭에서 항공기를 노선에 배정 → ③ 속도를 올려 수익을 확인하세요. 허브 공항 슬롯 8개로 시작합니다.</div></div>`}`}
+function vMk(){return`<h2>항공기 시장</h2>`+M.map((m,i)=>`<div class="c"><div class="fl"><b>${m[0]}</b><span class="mu sm">${m[1]}석 · ${m[4].toLocaleString()}km</span></div>
+ <div class="g2" style="margin-top:8px"><button class="btn s" onclick="A.buy(${i},1)">구매 ${fm(m[2]*1e6)}</button><button class="btn s g" onclick="A.buy(${i},0)">리스 ${fm(m[3]*1e6)}/월</button></div></div>`).join('')}
+function vFl(){if(!S.planes.length)return'<h2>함대</h2><div class="mu">보유 항공기가 없습니다. 시장에서 구매하거나 리스하세요.</div>';
+ return`<h2>함대 · 객실 구성</h2>`+S.planes.map(p=>{const m=M[p.m],s=seats(p),cl=p.cond<40?'bad':p.cond<70?'':'ok';
+ return`<div class="c"><div class="fl"><b>${pn(p)}</b><span class="chip">${p.own?'보유':'리스'}</span></div>
+ <div class="fl sm mu"><span>상태 <b class="${cl}">${p.mt?'정비 중 ('+p.mt+'일)':p.cond<20?'운항 불가':Math.round(p.cond)+'%'}</b></span><span>F ${s.f} / B ${s.b} / E ${s.e}</span></div><div class="bar" style="margin:6px 0 8px"><i style="width:${p.cond}%"></i></div>
+ <select onchange="A.assign(${p.id},this.value)"><option value="">노선 미배정</option>${S.routes.map(r=>`<option value="${r.id}" ${p.route==r.id?'selected':''}>${r.a} ⇄ ${r.b} (${Math.round(D(r.a,r.b)).toLocaleString()}km)</option>`).join('')}</select>
+ <div class="lbl"><span>퍼스트</span><span>${p.f}석</span></div><input type="range" min="0" max="12" value="${p.f}" onchange="A.cabin(${p.id},'f',this.value)">
+ <div class="lbl"><span>비즈니스</span><span>${p.b}석</span></div><input type="range" min="0" max="${Math.floor(m[1]/4)}" value="${p.b}" onchange="A.cabin(${p.id},'b',this.value)">
+ <div class="g2" style="margin-top:10px"><button class="btn s g" onclick="A.fix(${p.id})" ${p.mt||p.cond>97?'disabled':''}>정비 ${fm((100-p.cond)*m[2]*2e2)}</button><button class="btn s g" onclick="A.sell(${p.id})">${p.own?'매각':'리스 반납'}</button></div></div>`}).join('')}
+function vRt(){const o=Object.keys(AP).map(c=>`<option value="${c}">${c} ${AP[c][0]}</option>`).join('');
+ return`<h2>노선과 운임</h2><div class="c"><div class="g2"><select id="ra">${o}</select><select id="rb">${o.replace('value="ICN"','value="ICN" ').replace(/<option value="NRT"/,'<option selected value="NRT"')}</select></div><button class="btn" style="width:100%;margin-top:8px" onclick="A.route()">노선 개설</button></div>`+
+ S.routes.map(r=>{const e=econ(r),d=Math.round(D(r.a,r.b)),n=S.planes.filter(p=>p.route==r.id).length;
+ return`<div class="c"><div class="fl"><b>${r.a} ⇄ ${r.b}</b><span class="${e.rev-e.cost>=0?'ok':'bad'}">${n?fm(e.rev-e.cost)+'/일':'배정 대기'}</span></div>
+ <div class="sm mu">${d.toLocaleString()}km · 항공기 ${n}대 · 경쟁사 ${comp(r)}곳 · 탑승률 ${Math.round(e.lf*100)}%</div><div class="bar" style="margin:6px 0"><i style="width:${e.lf*100}%"></i></div>
+ ${['이코노미','비즈니스','퍼스트'].map((l,i)=>`<div class="lbl"><span>${l}</span><span>${fm(refFare(r,i))}</span></div><input type="range" min=".5" max="2" step=".05" value="${r.k[i]}" onchange="A.fare(${r.id},${i},this.value)">`).join('')}
+ <button class="btn s g" style="margin-top:8px" onclick="A.delR(${r.id})">노선 폐쇄</button></div>`}).join('')}
+function vSl(){const bad=S.planes.filter(p=>p.cond<70&&!p.mt).length;
+ return`<h2>공항 슬롯 · 정비</h2><div class="c fl"><span class="sm">정비 필요 항공기 <b>${bad}대</b> (상태 70% 미만)</span><button class="btn s" onclick="A.fixAll()" ${bad?'':'disabled'}>일괄 정비</button></div>`+
+ Object.keys(AP).map(a=>{const o=S.slots[a]||0,u=used(a),c=1.5e6*AP[a][3]*(1+o/10);return`<div class="c"><div class="fl"><b>${a} <span class="mu sm">${AP[a][0]}</span></b><button class="btn s g" onclick="A.slot('${a}')">슬롯+1 · ${fm(c)}</button></div><div class="fl sm mu"><span>사용 ${u} / 보유 ${o}</span><span>규모 ${'●'.repeat(AP[a][3])}</span></div><div class="bar" style="margin-top:5px"><i style="width:${o?u/o*100:0}%"></i></div></div>`}).join('')}
+function vRk(){const L=ranks(),mx=L[0].v;return`<h2>세계 항공사 순위</h2>`+L.map((x,i)=>`<div class="c" style="${x.me?`border-color:${x.col}`:''}"><div class="fl"><span><b>${i+1}</b> &nbsp;<span style="color:${x.col}">●</span> ${x.n}${x.me?' <span class="chip">나</span>':''}</span><b>${fm(x.v)}</b></div><div class="bar" style="margin-top:6px"><i style="width:${x.v/mx*100}%;background:${x.col}"></i></div></div>`).join('')}
+function modal(){const m=$('#modal');m.hidden=false;
+ m.innerHTML=`<div class="glass"><div class="fl"><h2 style="margin:0">설정</h2><button class="ib" onclick="$('#modal').hidden=true">✕</button></div>
+ <h3>내 계정</h3><div class="c"><div class="mu sm">표시 이름 ${ST.dev?'<span class="dev">★ 개발자</span>':''}</div><input value="${ST.name}" onchange="A.name(this.value)" maxlength="16" style="margin:5px 0 9px">
+ <div class="sm mu">상태: ${user?(user.isAnonymous?'익명 계정 (클라우드 저장 중)':user.email):'로컬 모드 — Firebase 설정 필요'}<br>UID: ${user?user.uid.slice(0,14)+'…':'-'}</div>${fb?`<button class="btn s g" style="margin-top:8px" onclick="A.google()">Google 계정으로 로그인</button>`:''}</div>
+ <h3>화면</h3><div class="seg"><button class="${ST.theme=='dark'?'on':''}" onclick="A.theme('dark')">다크</button><button class="${ST.theme=='light'?'on':''}" onclick="A.theme('light')">라이트</button></div>
+ <h3>사운드</h3><div class="lbl"><span>배경음</span></div><input type="range" min="0" max="1" step=".05" value="${ST.bgm}" oninput="A.vol('bgm',this.value)">
+ <div class="lbl"><span>효과음</span></div><input type="range" min="0" max="1" step=".05" value="${ST.sfx}" oninput="A.vol('sfx',this.value)" onchange="sfx.buy()">
+ <h3>개발자 코드</h3>${ST.dev?'<div class="c ok sm">개발자 칭호 활성화됨</div>':`<div class="row"><input id="dc" type="password" placeholder="코드 입력"><button class="btn" onclick="A.devIn()">확인</button></div>`}
+ ${ST.dev&&S?`<h3>개발자 전용</h3><div class="g2"><button class="btn s g" onclick="A.dev('cash')">현금 +$500M</button><button class="btn s g" onclick="A.dev('day')">30일 건너뛰기</button><button class="btn s g" onclick="A.dev('fix')">전 기체 즉시 정비</button><button class="btn s g" onclick="A.dev('slot')">전 공항 슬롯 +5</button><button class="btn s r" style="grid-column:1/-1" onclick="A.dev('reset')">데이터 초기화</button></div><div class="sm mu" style="margin-top:6px">16x 속도가 상단에 추가됩니다.</div>`:''}</div>`;
+ spdUI();m.onclick=e=>{if(e.target==m)m.hidden=true}}
+
+/* ---------- 캔버스 애니메이션 ---------- */
+const cv=$('#map'),cx=cv.getContext('2d');let W,H,MR,fl=[],pt=[],T=0,acc=0,PH={};
+const demo=[['ICN','LAX'],['LHR','SIN'],['DXB','JFK'],['SYD','NRT'],['FRA','GRU'],['HKG','CDG'],['ATL','LHR'],['DOH','JNB']].map((x,i)=>({id:'d'+i,a:x[0],b:x[1],n:1+i%2}));
+function rs(){const d=devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;cx.setTransform(d,0,0,d,0,0);
+ const g=S&&!$('#game').hidden,x=g?(W>760?[88,84,W-590,H-100]:[8,76,W-16,H*.36]):[0,0,W,H],w=Math.min(x[2],x[3]*2.4),h=w/2.4;MR={x:x[0]+(x[2]-w)/2,y:x[1]+(x[3]-h)/2,w,h}}
+addEventListener('resize',rs);
+const xy=a=>[MR.x+(AP[a][2]+180)/360*MR.w,MR.y+(78-AP[a][1])/150*MR.h];
+function burst(x,y,c,n){for(let i=0;i<n;i++){const a=R()*6.28,s=1+R()*5;pt.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-2,l:1,c:i%3?c:'#fff'})}}
+function bez(a,b,t){const A=xy(a),B=xy(b),cX=(A[0]+B[0])/2,cY=(A[1]+B[1])/2-Math.hypot(A[0]-B[0],A[1]-B[1])*.28,u=1-t;
+ return[u*u*A[0]+2*u*t*cX+t*t*B[0],u*u*A[1]+2*u*t*cY+t*t*B[1],2*u*(cX-A[0])+2*t*(B[0]-cX),2*u*(cY-A[1])+2*t*(B[1]-cY)]}
+function loop(t){const dt=Math.min(60,t-T||16);T=t;const live=S&&!$('#game').hidden;
+ if(live&&spd){acc+=dt*spd;let n=0;while(acc>=1000&&n++<16){acc-=1000;tick()}}
+ cx.clearRect(0,0,W,H);const g=cx.createRadialGradient(W*.4,H*.3,0,W*.4,H*.3,Math.max(W,H)*.9);g.addColorStop(0,CL.bg2);g.addColorStop(1,CL.bg);cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ cx.strokeStyle=CL.grid;cx.lineWidth=1;cx.beginPath();for(let x=0;x<W;x+=56){cx.moveTo(x,0);cx.lineTo(x,H)}for(let y=0;y<H;y+=56){cx.moveTo(0,y);cx.lineTo(W,y)}cx.stroke();
+ cx.fillStyle=CL.land;LAND.forEach(po=>{cx.beginPath();po.forEach((q,i)=>{const X=MR.x+(q[0]+180)/360*MR.w,Y=MR.y+(78-q[1])/150*MR.h;i?cx.lineTo(X,Y):cx.moveTo(X,Y)});cx.closePath();cx.fill()});
+ const col=live?AX(S.air)[3]:CL.a,rt=live?S.routes.map(r=>({...r,n:S.planes.filter(p=>p.route==r.id&&!p.mt&&p.cond>=20).length})):demo;
+ rt.forEach((r,ri)=>{const A_=xy(r.a),B_=xy(r.b),cX=(A_[0]+B_[0])/2,cY=(A_[1]+B_[1])/2-Math.hypot(A_[0]-B_[0],A_[1]-B_[1])*.28;
+  cx.strokeStyle=col;cx.globalAlpha=r.n?.45:.15;cx.lineWidth=1.4;cx.setLineDash([5,6]);cx.lineDashOffset=-T/60;cx.beginPath();cx.moveTo(A_[0],A_[1]);cx.quadraticCurveTo(cX,cY,B_[0],B_[1]);cx.stroke();cx.setLineDash([]);cx.globalAlpha=1;
+  for(let i=0;i<Math.min(r.n,6);i++){const key=r.id+':'+i;PH[key]=(PH[key]??R()*2)+dt*(live?Math.max(.4,spd):1)*.00022*(480/Math.max(200,Math.hypot(A_[0]-B_[0],A_[1]-B_[1])));PH[key]%=2;const ph=PH[key],tt=ph<1?ph:2-ph,dir=ph<1?1:-1;
+   for(let k=6;k>0;k--){const q=bez(r.a,r.b,Math.max(0,Math.min(1,tt-dir*k*.012)));cx.fillStyle=col;cx.globalAlpha=.05*(7-k);cx.beginPath();cx.arc(q[0],q[1],3.2-k*.3,0,6.3);cx.fill()}cx.globalAlpha=1;
+   const q=bez(r.a,r.b,tt);cx.save();cx.translate(q[0],q[1]);cx.rotate(Math.atan2(q[3],q[2])+(dir<0?Math.PI:0));cx.shadowColor=col;cx.shadowBlur=14;cx.fillStyle=CL.t;cx.beginPath();cx.moveTo(9,0);cx.lineTo(-5,-5.5);cx.lineTo(-2,0);cx.lineTo(-5,5.5);cx.closePath();cx.fill();cx.restore()}});
+ Object.keys(AP).forEach(a=>{const [x,y]=xy(a),own=live&&(S.slots[a]||0)>0,p=(Math.sin(T/500+x)+1)/2;cx.fillStyle=own?col:CL.t;cx.globalAlpha=own?1:.35;cx.beginPath();cx.arc(x,y,own?3.5:2.2,0,6.3);cx.fill();
+  if(own){cx.globalAlpha=.35*(1-p);cx.strokeStyle=col;cx.beginPath();cx.arc(x,y,5+p*10,0,6.3);cx.stroke();cx.globalAlpha=.8;cx.fillStyle=CL.t;cx.font='600 10px Noto Sans KR';cx.fillText(a,x+8,y+3)}cx.globalAlpha=1});
+ fl=fl.filter(f=>(f.t+=dt)<2200);fl.forEach(f=>{cx.globalAlpha=1-f.t/2200;cx.fillStyle=f.c;cx.font='700 12px Noto Sans KR';cx.fillText(f.s,f.x,f.y-f.t*.02)});cx.globalAlpha=1;
+ pt=pt.filter(p=>(p.l-=.016)>0);pt.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.12;cx.globalAlpha=Math.max(0,p.l);cx.fillStyle=p.c;cx.fillRect(p.x,p.y,4,4)});cx.globalAlpha=1;
+ if(live){const c=$('#cash');c._v=(c._v??S.cash)+(S.cash-(c._v??S.cash))*.12;c.textContent=fm(c._v);c.style.color=S.cash<0?CL.bad:''}
+ requestAnimationFrame(loop)}
+applyTheme();rs();intro();initFB();requestAnimationFrame(loop);
+</script></body></html>
